@@ -199,27 +199,27 @@ export default function Dashboard() {
       {/* ── 趋势图 + 排行 ── */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} lg={12}>
-          <Card title={<Space><BarChartOutlined />偿付能力充足率 NIM 年度趋势</Space>}
-            extra={<Text type="secondary" style={{ fontSize: 12 }}>全银行均值</Text>}>
-            <MiniBarChart data={data.nim_trend || []} height={150} color="#1677ff" />
+          <Card title={<Space><BarChartOutlined />综合偿付能力充足率年度趋势</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>全行业均值</Text>}>
+            <MiniBarChart data={data.solvency_trend || []} height={150} color="#1677ff" />
           </Card>
         </Col>
         <Col xs={24} lg={12}>
           <Card title={<Space><StockOutlined />ROE 年度趋势</Space>}
-            extra={<Text type="secondary" style={{ fontSize: 12 }}>全银行均值</Text>}>
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>全行业均值</Text>}>
             <MiniBarChart data={data.roe_trend || []} height={150} color="#52c41a" />
           </Card>
         </Col>
       </Row>
 
-      {/* ── NPL 排行 + 机构类型分布 ── */}
+      {/* ── 偿付能力排名 + 机构类型分布 ── */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} lg={10}>
-          <Card title={<Space><ThunderboltOutlined />不良贷款率 NPL 最低排名</Space>}
-            extra={<Text type="secondary" style={{ fontSize: 12 }}>2025 FY</Text>}>
-            {data.npl_ranking?.length > 0 ? (
+          <Card title={<Space><ThunderboltOutlined />综合偿付能力充足率排名</Space>}
+            extra={<Text type="secondary" style={{ fontSize: 12 }}>2025 FY · 越高越好</Text>}>
+            {data.solvency_ranking?.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {(data.npl_ranking || []).map((item: any, idx: number) => (
+                {(data.solvency_ranking || []).map((item: any, idx: number) => (
                   <div key={item.bank_code} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '6px 12px', background: idx % 2 === 0 ? '#fafafa' : '#fff', borderRadius: 6,
                     borderLeft: `3px solid ${idx < 3 ? '#52c41a' : '#d9d9d9'}` }}>
@@ -233,13 +233,12 @@ export default function Dashboard() {
                       <Text style={{ fontSize: 13 }}>{item.bank_name}</Text>
                     </Space>
                     <Space>
-                      {item.value > 2 ? <RiseOutlined style={{ color: '#ff4d4f' }} /> : <FallOutlined style={{ color: '#52c41a' }} />}
-                      <Text strong style={{ color: item.value > 2 ? '#ff4d4f' : '#52c41a', fontSize: 14 }}>{item.value}%</Text>
+                      <Text strong style={{ color: idx < 3 ? '#52c41a' : '#595959', fontSize: 14 }}>{item.value}%</Text>
                     </Space>
                   </div>
                 ))}
               </div>
-            ) : <EmptyPlaceholder text="暂无不���率数据" />}
+            ) : <EmptyPlaceholder text="暂无偿付能力数据" />}
           </Card>
         </Col>
 

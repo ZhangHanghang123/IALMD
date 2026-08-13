@@ -164,45 +164,45 @@ def get_dashboard(
     for cc, cnt in cat_rows:
         indicator_cat_dist.append({"code": cc, "label": cat_label.get(cc, cc), "count": cnt})
 
-    # ─── 净息差(NIM)年度趋势（直接从指标值表取，无需 JOIN） ───
-    nim_trend = []
+    # ─── 综合偿付能力充足率年度趋势 ───
+    solvency_trend = []
     for year in range(2023, 2027):
         vals = db.query(func.avg(IalmdIndicatorValue.value_numeric)).filter(
-            IalmdIndicatorValue.indicator_code == "PROFITABILITY_NIM",
+            IalmdIndicatorValue.indicator_code == "COMP_SOLVENCY",
             IalmdIndicatorValue.report_year == year, IalmdIndicatorValue.report_period == "FY",
             IalmdIndicatorValue.status == 1, IalmdIndicatorValue.is_deleted == 0,
         ).scalar()
         if vals:
-            nim_trend.append({"period": str(year), "value": round(float(vals) * 100, 2)})
+            solvency_trend.append({"period": str(year), "value": round(float(vals), 1)})
 
-    # ─── 不良率(NPL)排行（2025 FY，按值升序 = 最优排第一） ───
-    npl_ranking = []
-    npl_rows = db.query(
-        IalmdIndicatorValue.institution_id, func.avg(IalmdIndicatorValue.value_numeric).label('avg_val'),
+    # ─── 综合偿付能力充足率排名（2025 FY，降序 = 最优排第一） ───
+    solvency_ranking = []
+    sol_rows = db.query(
+        IalmdIndicatorValue.bank_code, func.avg(IalmdIndicatorValue.value_numeric).label('avg_val'),
     ).filter(
-        IalmdIndicatorValue.indicator_code == "ASSET_QUALITY_NPL",
+        IalmdIndicatorValue.indicator_code == "COMP_SOLVENCY",
         IalmdIndicatorValue.report_year == 2025, IalmdIndicatorValue.report_period == "FY",
         IalmdIndicatorValue.status == 1, IalmdIndicatorValue.is_deleted == 0,
-    ).group_by(IalmdIndicatorValue.institution_id).order_by(func.avg(IalmdIndicatorValue.value_numeric).asc()).limit(10).all()
+    ).group_by(IalmdIndicatorValue.bank_code).order_by(func.avg(IalmdIndicatorValue.value_numeric).desc()).limit(10).all()
 
-    for idx, (inst_id, val) in enumerate(npl_rows):
-        bank = db.query(IalmdBankInstitution).filter(IalmdBankInstitution.id == inst_id).first()
+    for idx, (bank_code, val) in enumerate(sol_rows):
+        bank = db.query(IalmdBankInstitution).filter(IalmdBankInstitution.bank_code == bank_code).first()
         if bank:
-            npl_ranking.append({
+            solvency_ranking.append({
                 "bank_name": bank.short_name or bank.bank_name,
-                "bank_code": bank.bank_code, "value": round(float(val) * 100, 2), "rank": idx + 1,
+                "bank_code": bank_code, "value": round(float(val), 1), "rank": idx + 1,
             })
 
     # ─── ROE 趋势 ───
     roe_trend = []
     for year in range(2023, 2027):
         vals = db.query(func.avg(IalmdIndicatorValue.value_numeric)).filter(
-            IalmdIndicatorValue.indicator_code == "PROFITABILITY_ROE",
+            IalmdIndicatorValue.indicator_code == "ROE",
             IalmdIndicatorValue.report_year == year, IalmdIndicatorValue.report_period == "FY",
             IalmdIndicatorValue.status == 1, IalmdIndicatorValue.is_deleted == 0,
         ).scalar()
         if vals:
-            roe_trend.append({"period": str(year), "value": round(float(vals), 2)})
+            roe_trend.append({"period": str(year), "value": round(float(vals), 1)})
 
     # ─── 最近采集报告（优先 report_record，空则用 bank_report_link） ───
     recent_reports = []
@@ -259,9 +259,9 @@ def get_dashboard(
         "bank_type_dist": bank_type_dist,
         "report_type_dist": report_type_dist,
         "indicator_cat_dist": indicator_cat_dist,
-        "nim_trend": nim_trend,
+        "solvency_trend": solvency_trend,
         "roe_trend": roe_trend,
-        "npl_ranking": npl_ranking,
+        "solvency_ranking": solvency_ranking,
         "recent_reports": recent_reports,
         "last_value_time": last_value.isoformat() if last_value else None,
     }
