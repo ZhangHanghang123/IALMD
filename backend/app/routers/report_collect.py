@@ -26,6 +26,7 @@ router = APIRouter(prefix="/api/report-collect", tags=["报告采集"])
 def list_tasks(
     page: int = 1, page_size: int = 20,
     institution_id: Optional[int] = None,
+    institution_ids: Optional[str] = None,
     report_type: Optional[str] = None,
     extraction_status: Optional[str] = None,
     keyword: Optional[str] = None,
@@ -39,6 +40,11 @@ def list_tasks(
         IalmdBankReportLink.is_deleted == 0,
         IalmdBankInstitution.is_deleted == 0,
     )
+    # 支持多机构筛选（逗号分隔）
+    if institution_ids:
+        id_list = [int(x.strip()) for x in institution_ids.split(",") if x.strip().isdigit()]
+        if id_list:
+            q = q.filter(IalmdBankReportLink.institution_id.in_(id_list))
     if institution_id:
         q = q.filter(IalmdBankReportLink.institution_id == institution_id)
     if report_type:

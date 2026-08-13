@@ -12,8 +12,9 @@ import { ontologyApi, reportCollectApi } from '../api'
 
 const REPORT_TYPES: Record<string, string> = {
   ANNUAL: '年度报告', HALF: '半年度报告', QREPORT: '季度报告',
-  EXPRESS: '业绩快报', CAPITAL: '资本充足率', LIQUIDITY: '流动性风险',
-  ESG: 'ESG报告', INCLUSIVE: '普惠金融', CONSUMER: '消费者保护', GREEN: '绿色金融',
+  SOLVENCY: '偿付能力报告', ACTUARIAL: '精算报告',
+  PREMIUM: '保费收入公告', DIVIDEND: '分红实现率公告',
+  ESG: 'ESG报告', CONSUMER: '消费者保护',
 }
 
 export default function ReportManager() {
@@ -40,7 +41,10 @@ export default function ReportManager() {
   const loadTasks = async () => {
     setLoading(true)
     try {
-      const r: any = await reportCollectApi.listTasks({ page, page_size: 20, ...filters })
+      const r: any = await reportCollectApi.listTasks({
+        page, page_size: 20, ...filters,
+        institution_ids: selectedBanks || undefined,
+      })
       setTasks(r.data || [])
       setTasksTotal(r.total || 0)
     } catch {}
@@ -69,7 +73,7 @@ export default function ReportManager() {
   useEffect(() => {
     if (activeTab === 'tasks') loadTasks()
     if (activeTab === 'results') loadExtractResults()
-  }, [activeTab, page, filters])
+  }, [activeTab, page, filters, selectedBanks])
 
   const handleCollect = async () => {
     if (!selectedBanks) { message.warning('请选择保险机构'); return }
@@ -177,7 +181,7 @@ export default function ReportManager() {
             <Select allowClear placeholder="状态"
               onChange={(v: string) => setFilters((f: any) => ({ ...f, extraction_status: v || undefined }))}>
               <Select.Option value="PENDING">待提取</Select.Option>
-              <Select.Option value="PARSED">已提取</Select.Option>
+              <Select.Option value="DONE">已提取</Select.Option>
             </Select>
           </Col>
           <Col><Button icon={<ReloadOutlined />} onClick={loadTasks}>刷新</Button></Col>
@@ -224,7 +228,9 @@ function UploadSection({ bankOptions, onUploaded }: { bankOptions: any[], onUplo
             <Select.Option value="ANNUAL">年度报告</Select.Option>
             <Select.Option value="HALF">半年度报告</Select.Option>
             <Select.Option value="QREPORT">季度报告</Select.Option>
-            <Select.Option value="EXPRESS">业绩快报</Select.Option>
+            <Select.Option value="SOLVENCY">偿付能力报告</Select.Option>
+            <Select.Option value="ACTUARIAL">精算报告</Select.Option>
+            <Select.Option value="PREMIUM">保费收入公告</Select.Option>
             <Select.Option value="ESG">ESG报告</Select.Option>
           </Select>
         </Col>
