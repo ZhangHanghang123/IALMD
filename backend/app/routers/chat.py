@@ -755,10 +755,22 @@ def check_report(
 
 
 def _render_content_to_docx(doc, content: str):
-    """将聊天内容渲染到docx：文本段落/HTML表格/chart图表"""
+    """将聊天内容渲染到docx：文本段落/HTML表格/chart图表/references参考资料"""
     import re, json
     from docx.shared import Pt, RGBColor
-    
+
+    # 提取并移除 [references]...[/references] 结构（避免原始标记出现在正文）
+    ref_pattern = re.compile(r'\[references\]([\s\S]*?)\[/references\]', re.DOTALL)
+    ref_items = None
+    m = ref_pattern.search(content)
+    if m:
+        content = content[:m.start()] + content[m.end():]
+        try:
+            ref_data = json.loads(m.group(1).strip())
+            ref_items = ref_data.get("items", [])
+        except Exception:
+            ref_items = None
+
     segments = []
     last_idx = 0
     chart_pattern = re.compile(r'\[chart:(\w+)\]([\s\S]*?)\[/chart\]', re.DOTALL)
@@ -790,6 +802,65 @@ def _render_content_to_docx(doc, content: str):
                     _add_md_table_to_docx(doc, tables_in_text[i])
         elif seg_type == 'chart':
             _add_chart_image_to_docx(doc, seg_data)
+
+    # 渲染参考资料章节
+    if ref_items:
+        _add_references_to_docx(doc, ref_items)
+
+
+def _add_references_to_docx(doc, ref_items: list):
+    """将参考资料渲染为结构化的 Word 章节"""
+    from docx.shared import Pt, RGBColor
+
+    if not ref_items:
+        return
+
+    doc.add_heading('参考资料', level=2)
+
+    type_label = {"report": "📄 报告", "indicator": "📊 指标", "external": "🌐 外部数据"}
+    type_order = ["report", "indicator", "external"]
+
+    for t in type_order:
+        items = [x for x in ref_items if x.get("type") == t]
+        if not items:
+            continue
+        doc.add_heading(type_label.get(t, t), level=3)
+        for item in items:
+            title = item.get("title", "")
+            # 构建元信息行
+            meta_parts = []
+            if item.get("bank"):
+                meta_parts.append(item["bank"])
+            if item.get("year"):
+                meta_parts.append(str(item["year"]))
+            if item.get("reportType"):
+                meta_parts.append(item["reportType"])
+            if item.get("value"):
+                meta_parts.append(item["value"])
+            if item.get("category"):
+                meta_parts.append(item["category"])
+            if item.get("source"):
+                meta_parts.append(item["source"])
+
+            # 标题行（加粗）
+            p = doc.add_paragraph()
+            run = p.add_run(f"• {title}")
+            run.bold = True
+            run.font.size = Pt(10.5)
+
+            # 元信息行（灰色）
+            if meta_parts:
+                p2 = doc.add_paragraph()
+                run2 = p2.add_run("    " + " | ".join(meta_parts))
+                run2.font.size = Pt(9)
+                run2.font.color.rgb = RGBColor(0x88, 0x88, 0x88)
+
+            # 详情行
+            if item.get("detail"):
+                p3 = doc.add_paragraph()
+                run3 = p3.add_run("    " + item["detail"])
+                run3.font.size = Pt(9)
+                run3.font.color.rgb = RGBColor(0xAA, 0xAA, 0xAA)
 
 
 def _add_text_to_docx(doc, text: str):
