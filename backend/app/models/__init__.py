@@ -3,7 +3,11 @@ from .system import SysUser, SysRole, SysUserRole, SysPermission, SysRolePermiss
 from .bank import IalmdBankInstitution
 from .report import IalmdReportRecord, IalmdReportFile, IalmdCollectTask
 from .indicator import IalmdIndicatorDefine, IalmdIndicatorValue
-from .ontology import IalmdOntologyClass, IalmdOntologyRelation, IalmdIndicatorMapping, IalmdBankReportLink, IalmdOntologyVersion
+from .ontology import (
+    IalmdOntologyClass, IalmdOntologyRelation, IalmdIndicatorMapping, IalmdBankReportLink,
+    IalmdOntologyVersion, IalmdMappingCandidate, IalmdOntologyRelationType, IalmdOntologyTag,
+    SysOntologyAuditLog,
+)
 from .workflow import IalmdWorkflowDef, IalmdWorkflowExec, IalmdWorkflowNodeExec
 from .chat import IalmdChatSession, IalmdChatMessage
 from .benchmark import IalmdBenchmarkCompare
@@ -17,6 +21,7 @@ __all__ = [
     "IalmdReportRecord", "IalmdReportFile", "IalmdCollectTask",
     "IalmdIndicatorDefine", "IalmdIndicatorValue",
     "IalmdOntologyClass", "IalmdOntologyRelation", "IalmdIndicatorMapping", "IalmdBankReportLink", "IalmdOntologyVersion",
+    "IalmdMappingCandidate", "IalmdOntologyRelationType", "IalmdOntologyTag", "SysOntologyAuditLog",
     "IalmdWorkflowDef", "IalmdWorkflowExec", "IalmdWorkflowNodeExec",
     "IalmdChatSession", "IalmdChatMessage",
     "IalmdBenchmarkCompare",
