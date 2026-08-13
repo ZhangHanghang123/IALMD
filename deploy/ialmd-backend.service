@@ -1,0 +1,31 @@
+[Unit]
+Description=IALMD Backend API Server (FastAPI + Uvicorn)
+After=network.target mysql.service redis-server.service
+Wants=mysql.service redis-server.service
+
+[Service]
+Type=exec
+User=ialmd
+Group=ialmd
+WorkingDirectory=/opt/ialmd/backend
+Environment="PATH=/opt/ialmd/backend/venv/bin:/usr/local/bin:/usr/bin"
+EnvironmentFile=/opt/ialmd/backend/.env
+
+ExecStart=/opt/ialmd/backend/venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 \
+    --port 8002 \
+    --workers 2 \
+    --loop uvloop \
+    --http httptools \
+    --no-access-log
+
+Restart=always
+RestartSec=5
+
+StandardOutput=append:/opt/ialmd/logs/backend/app.log
+StandardError=append:/opt/ialmd/logs/backend/error.log
+
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

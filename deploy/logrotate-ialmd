@@ -1,0 +1,11 @@
+# ALMD Nginx 日志轮转
+/opt/almd/logs/backend/*.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    notifempty
+    missingok
+    copytruncate
+    size 100M
+}
